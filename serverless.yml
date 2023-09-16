@@ -1,0 +1,77 @@
+service: bialog-aws-serverless
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  function1:
+    handler: index.handler
+    events:
+      - http:
+          path: hello
+          method: get
+          cors: true
+          authorizer: aws_iam
+          request:
+            parameters:
+              querystrings:
+                name: true
+
+stepFunctions:
+  stateMachines:
+    criaOfertaStateMachine:
+      name: criaOfertaStateMachine
+      definition:
+        Comment: "A Hello World example of the Amazon States Language using an AWS Lambda Function"
+        StartAt: HelloWorld1
+        States:
+          HelloWorld1:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [function1, Arn]
+            End: true
+      # dependsOn: CustomIamRole
+      tags:
+        Team: Atlantis
+      alarms:
+        topics:
+          ok: arn:aws:sns:us-east-1:1234567890:NotifyMe
+          alarm: arn:aws:sns:us-east-1:1234567890:NotifyMe
+          insufficientData: arn:aws:sns:us-east-1:1234567890:NotifyMe
+        metrics:
+          - executionsTimedOut
+          - executionsFailed
+          - executionsAborted
+          - metric: executionThrottled
+            treatMissingData: breaching # overrides below default
+          - executionsSucceeded
+        treatMissingData: ignore # optional
+  activities:
+    - myTask
+    - yourTask
+  validate: true # enable pre-deployment definition validation (disabled by default)
+
+custom:
+  nested-stacks:
+    location: ./
+    stacks:
+      - id: MyGroovyNestedStack                  # Logical ID (Required)
+        template: nested.yml            # Template file name (Required)
+        enabled: true                            # optional flag for enabled/disabling substack
+        timeout: 60                              # Minutes before stack creation times out.
+
+
+plugins:
+  - serverless-step-functions
+  - serverless-aws-nested-stacks
+
+resources:
+  Resources:
+    MyGroovyNestedStack:
+      Type: AWS::CloudFormation::Stack
+      Properties:
+        TemplateURL: https://s3.amazonaws.com/bialog-aws-serverless-dev-serverlessdeploymentbucket-1q2j5q3q3q3q3/nested.yml

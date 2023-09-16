@@ -1,0 +1,59 @@
+service: nested-service
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  function2:
+    handler: index2.handler
+
+# resources:
+#   extensions:
+#     nested-stack:
+#       Type: AWS::CloudFormation::Stack
+#       Properties:
+#         TemplateFile: nested.yml
+#         Parameters:
+#           NestedStackParam1: value1
+#           NestedStackParam2: value2
+
+stepFunctions:
+  stateMachines:
+    nestedStateMachine:
+      name: nestedStateMachine
+      definition:
+        Comment: "Nested Stack State Machine"
+        StartAt: nestedHelloWorld
+        States:
+          nestedHelloWorld:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [function2, Arn]
+            End: true
+      # dependsOn: CustomIamRole
+      tags:
+        Team: Atlantis
+      alarms:
+        topics:
+          ok: arn:aws:sns:us-east-1:1234567890:NotifyMe
+          alarm: arn:aws:sns:us-east-1:1234567890:NotifyMe
+          insufficientData: arn:aws:sns:us-east-1:1234567890:NotifyMe
+        metrics:
+          - executionsTimedOut
+          - executionsFailed
+          - executionsAborted
+          - metric: executionThrottled
+            treatMissingData: breaching # overrides below default
+          - executionsSucceeded
+        treatMissingData: ignore # optional
+  activities:
+    - myTask2
+    - yourTask2
+  validate: true # enable pre-deployment definition validation (disabled by default)
+
+plugins:
+  - serverless-step-functions

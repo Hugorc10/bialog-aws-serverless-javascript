@@ -1,0 +1,21 @@
+Resources:
+  StepFunction1:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: Step Function 1
+        StartAt: MyState
+        States:
+          MyState:
+            Type: Task
+            Resource: arn:aws:lambda:us-east-1:123456789012:function:MyLambdaFunction1
+  StepFunction2:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: Step Function 2
+        StartAt: MyState
+        States:
+          MyState:
+            Type: Task
+            Resource: arn:aws:lambda:us-east-1:123456789012:function:MyLambdaFunction2

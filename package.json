@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "deploy": "sls deploy --config serverless.yml && sls deploy --config nested.yml",
+    "remove": "serverless remove"
+  },
+  "devDependencies": {
+    "serverless-aws-nested-stacks": "^0.1.2",
+    "serverless-step-functions": "^3.15.0"
+  }
+}
