@@ -5,7 +5,11 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
-  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-step-functions
+  - serverless-plugin-additional-stacks
+  # - serverless-aws-nested-stacks
 
 functions:
   function1:
@@ -56,22 +60,8 @@ stepFunctions:
   validate: true # enable pre-deployment definition validation (disabled by default)
 
 custom:
-  nested-stacks:
-    location: ./
-    stacks:
-      - id: MyGroovyNestedStack                  # Logical ID (Required)
-        template: nested.yml            # Template file name (Required)
-        enabled: true                            # optional flag for enabled/disabling substack
-        timeout: 60                              # Minutes before stack creation times out.
-
-
-plugins:
-  - serverless-step-functions
-  - serverless-aws-nested-stacks
-
-resources:
-  Resources:
-    MyGroovyNestedStack:
-      Type: AWS::CloudFormation::Stack
-      Properties:
-        TemplateURL: https://s3.amazonaws.com/bialog-aws-serverless-dev-serverlessdeploymentbucket-1q2j5q3q3q3q3/nested.yml
+  additionalStacks:
+    stackName:
+      Deploy: After
+      StackName: NestedStack
+      Template: nested.yml

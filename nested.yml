@@ -5,7 +5,9 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
-  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-step-functions
 
 functions:
   function2:
@@ -54,6 +56,3 @@ stepFunctions:
     - myTask2
     - yourTask2
   validate: true # enable pre-deployment definition validation (disabled by default)
-
-plugins:
-  - serverless-step-functions
