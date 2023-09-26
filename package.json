@@ -5,6 +5,7 @@
   },
   "devDependencies": {
     "serverless-aws-nested-stacks": "^0.1.2",
+    "serverless-offline": "^13.1.0",
     "serverless-step-functions": "^3.15.0"
   },
   "dependencies": {

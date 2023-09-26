@@ -1,0 +1,95 @@
+service: cria-oferta-service
+
+provider:
+  name: aws
+  region: us-east-1
+  timeout: 60
+  runtime: nodejs18.x
+
+custom:
+  alteraEtapaTopicArn:
+    Fn::ImportValue: AlteraEtapaTopicArn
+
+functions:
+  criaOfertaFunction:
+    handler: index.handler
+    environment:
+      ALTERAETAPA_ARN: ${self:custom.alteraEtapaTopicArn}
+
+stepFunctions:
+  stateMachines:
+    criaOfertaStateMachine:
+      name: criaOfertaStateMachine
+      role:
+         Fn::GetAtt: [criaOfertaStateMachineExecutionRole, Arn]
+      definition:
+        Comment: "A Hello World example of the Amazon States Language using an AWS Lambda Function"
+        StartAt: Teste
+        States:
+          Teste:
+            Type: Pass
+            Result: "Hello World"
+            Next: AlteraEtapaArn
+          AlteraEtapaArn:
+            Type: Pass
+            Result:
+              alteraEtapaArn: ${self:custom.alteraEtapaTopicArn}
+            End: true
+          # HelloWorld1:
+          #   Type: Task
+          #   Resource:
+          #     Fn::GetAtt: [criaOferta, Arn]
+          #   End: true
+
+
+      # dependsOn: CustomIamRole
+
+plugins:
+  - serverless-offline
+  - serverless-step-functions
+  - serverless-plugin-additional-stacks
+  # - serverless-aws-nested-stacks
+
+resources:
+  Resources:
+     criaOfertaStateMachineExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  Fn::Sub: states.${AWS::Region}.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: dev-cria-oferta-service-statemachine
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                  - states:StartExecution
+                  Resource:
+                  - "*"
+
+                - Effect: Allow
+                  Action:
+                  - states:DescribeExecution
+                  - states:StopExecution
+                  Resource: "*"
+
+                - Effect: Allow
+                  Action:
+                  - events:PutTargets
+                  - events:PutRule
+                  - events:DescribeRule
+                  Resource: arn:aws:events:us-east-1:865522842129:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule
+
+  Outputs:
+    CriaOfertaStateMachineArn:
+      Value:
+        Ref: CriaOfertaStateMachine
+      Export:
+        Name: CriaOfertaStateMachineArn

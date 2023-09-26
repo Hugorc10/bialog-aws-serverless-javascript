@@ -1,0 +1,29 @@
+service: altera-etapa
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  timeout: 60
+
+functions:
+  atualizaStatusConsumerFunction:
+    handler: index.handler
+
+plugins:
+  - serverless-offline
+  - serverless-step-functions
+
+resources:
+  Resources:
+    AlteraEtapaTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: AlteraEtapaTopic
+        DisplayName: AlteraEtapaTopic
+
+  Outputs:
+    AlteraEtapaTopicArn:
+      Value: {"Ref": "AlteraEtapaTopic"}
+      Export:
+        Name: AlteraEtapaTopicArn
